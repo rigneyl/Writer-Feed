@@ -1,0 +1,486 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Writer Feed — Minimal One‑Page Template + Composer</title>
+  <meta name="description" content="A clean, single‑file HTML template that displays writing in a social feed style with search, tags, dark mode, local bookmarks, and a minimal composer."/>
+  <style>
+    :root{
+      --bg: #0f1115;        /* dark background */
+      --panel: #151923;     /* card background */
+      --text: #e8eaf0;      /* primary text */
+      --muted: #a2abc2;     /* secondary text */
+      --accent: #7dd3fc;    /* cyan */
+      --accent-2:#c084fc;   /* violet */
+      --stroke:#202737;     /* borders */
+      --chip:#1d2433;       /* tag chip */
+      --like:#fca5a5;       /* like tint */
+    }
+    .light{
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --text: #0e1222;
+      --muted: #5a6276;
+      --accent: #0ea5e9;
+      --accent-2:#7c3aed;
+      --stroke:#e7eaf1;
+      --chip:#eef2f9;
+      --like:#ef4444;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial;
+      background: var(--bg); color: var(--text);
+    }
+
+    /* Header */
+    .top{
+      position:sticky; top:0; z-index:20; backdrop-filter:saturate(140%) blur(8px);
+      background: linear-gradient(180deg, color-mix(in oklab, var(--bg), #000 10%) 0%, transparent 100%);
+      border-bottom:1px solid var(--stroke);
+    }
+    .bar{max-width:1100px; margin:0 auto; padding:12px 16px; display:flex; gap:12px; align-items:center}
+    .brand{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.3px}
+    .logo{width:28px; height:28px; border-radius:8px; background:conic-gradient(from 220deg, var(--accent), var(--accent-2)); box-shadow:0 0 0 2px color-mix(in oklab, var(--bg), #fff 6%)}
+    .search{flex:1; position:relative}
+    .search input{width:100%; padding:10px 12px 10px 36px; border-radius:12px; background: var(--panel); color:var(--text); border:1px solid var(--stroke); outline:none}
+    .search svg{position:absolute; left:10px; top:9px; opacity:.6}
+    .btn{border:1px solid var(--stroke); background: var(--panel); color:var(--text); padding:10px 12px; border-radius:12px; cursor:pointer}
+
+    /* Shell */
+    .wrap{max-width:1100px; margin: 14px auto 64px; padding:0 16px; display:grid; gap:16px; grid-template-columns: 1fr;}
+    @media(min-width:1020px){ .wrap{grid-template-columns: 260px 1fr;} }
+
+    /* Sidebar */
+    .side{position:sticky; top:64px; align-self:start; display:flex; flex-direction:column; gap:10px}
+    .panel{background: var(--panel); border:1px solid var(--stroke); border-radius:16px; padding:14px}
+    .panel h3{margin:.2rem 0 8px; font-size:13px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted)}
+    .chips{display:flex; flex-wrap:wrap; gap:8px}
+    .chip{padding:6px 10px; background: var(--chip); border:1px solid var(--stroke); border-radius:999px; font-size:13px; color:var(--muted); cursor:pointer}
+    .chip.active{outline:2px solid color-mix(in oklab, var(--accent), #fff 20%); color:var(--text)}
+
+    /* Feed */
+    .feed{display:grid; gap:14px}
+    .card{background: var(--panel); border:1px solid var(--stroke); border-radius:18px; padding:16px; box-shadow: 0 6px 18px -12px rgba(0,0,0,.4)}
+    .meta{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted)}
+    .meta .dot{width:6px; height:6px; border-radius:50%; background:var(--accent); opacity:.7}
+    .title{margin:8px 0 6px; font-weight:700; letter-spacing:.25px}
+    .body p{margin:.6em 0}
+    .tags{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+    .tag{font-size:12px; padding:4px 8px; background:var(--chip); border:1px solid var(--stroke); border-radius:999px; color:var(--muted)}
+    .actions{display:flex; align-items:center; gap:10px; margin-top:12px}
+    .iconbtn{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:10px; border:1px solid var(--stroke); background:transparent; color:var(--muted); cursor:pointer}
+    .iconbtn.active{color:var(--text); border-color: color-mix(in oklab, var(--accent), #fff 20%);}
+    .iconbtn.like.active{background: color-mix(in oklab, var(--like), transparent 85%)}
+    .muted{color:var(--muted)}
+
+    .load{display:block; margin:10px auto 0;}
+    .empty{padding:32px; text-align:center; color:var(--muted)}
+
+    /* Footer */
+    footer{max-width:1100px; margin:56px auto 80px; padding:0 16px; color:var(--muted); text-align:center}
+
+    /* Small tweaks */
+    a{color:var(--accent)}
+    kbd{background:var(--chip); border:1px solid var(--stroke); border-radius:6px; padding:2px 6px; font-size:12px}
+
+    /* Composer */
+    .composer-wrap{max-width:1100px; margin:10px auto 0; padding:0 16px}
+    .composer{background:var(--panel); border:1px solid var(--stroke); border-radius:16px; padding:12px; display:none}
+    .composer.open{display:block}
+    .composer .row{display:grid; gap:10px; grid-template-columns: 1fr 1fr}
+    .composer label{font-size:12px; color:var(--muted)}
+    .composer input, .composer textarea{width:100%; background:var(--chip); color:var(--text); border:1px solid var(--stroke); border-radius:10px; padding:8px 10px; font:inherit}
+    .composer textarea{min-height:120px; resize:vertical}
+    .composer .actions{display:flex; gap:10px; justify-content:flex-end; margin-top:10px}
+    .fab{position:fixed; right:16px; bottom:16px; padding:12px 14px; border-radius:999px; box-shadow:0 10px 30px -10px rgba(0,0,0,.6)}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="bar">
+      <div class="brand"><div class="logo" aria-hidden="true"></div><span>Writer Feed</span></div>
+      <div class="search">
+        <input id="q" type="search" placeholder="Search posts, tags, lines…  (Press / to focus)" autocomplete="off" />
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21 21l-4.3-4.3M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" stroke="currentColor" stroke-width="1.5"/></svg>
+      </div>
+      <button id="themeBtn" class="btn" title="Toggle theme">🌗</button>
+      <button id="composeToggle" class="btn" title="New fragment">＋ New</button>
+      <button id="exportHtml" class="btn" title="Export updated HTML">⬇ Export Updated HTML</button>
+    </div>
+  </header>
+
+  <!-- Minimal Composer -->
+  <div class="composer-wrap">
+    <div id="composer" class="composer" aria-hidden="true">
+      <div class="row">
+        <div>
+          <label for="cTitle">Title</label>
+          <input id="cTitle" type="text" placeholder="Untitled" />
+        </div>
+        <div>
+          <label for="cTags">Tags (comma‑separated)</label>
+          <input id="cTags" type="text" placeholder="poetry, night" />
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <label for="cBody">Body</label>
+        <textarea id="cBody" placeholder="Write the fragment… Use blank lines for new paragraphs."></textarea>
+      </div>
+      <div class="actions">
+        <button id="cClear" class="btn" title="Clear">Clear</button>
+        <button id="cSave" class="btn" title="Save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <!-- Sidebar: Tags & Info -->
+    <aside class="side">
+      <section class="panel" id="unsavedBanner" style="display:none; border-style:dashed;">You have unsaved posts. Click <b>Export Updated HTML</b> to embed them into the file.</section>
+      <section class="panel">
+        <h3>Tags</h3>
+        <div id="tagChips" class="chips"></div>
+      </section>
+      <section class="panel">
+        <h3>About</h3>
+        <div class="muted" style="font-size:14px">
+          Drop your writing into <code>POSTS</code> (below) and this page renders a clean, scrollable feed. Or use <b>＋ New</b> to compose and save locally.
+          Your additions are stored only in this browser (localStorage).
+        </div>
+      </section>
+      <section class="panel">
+        <h3>Shortcuts</h3>
+        <div class="muted" style="font-size:14px; display:grid; gap:6px">
+          <div><kbd>/</kbd> Focus search</div>
+          <div><kbd>Esc</kbd> Clear search</div>
+          <div>Click a tag to filter</div>
+        </div>
+      </section>
+    </aside>
+
+    <!-- Feed -->
+    <section>
+      <div id="feed" class="feed"></div>
+      <button id="loadMore" class="btn load">Load more</button>
+      <div id="empty" class="empty" hidden>No posts match your filter.</div>
+    </section>
+  </main>
+
+  <footer>
+    <small>Single‑file template. Edit, duplicate, ship. — <a href="#" id="exportLink">Export filtered view</a></small>
+  </footer>
+
+  <!-- ============================================= -->
+  <!-- 1) DATA: Edit your posts here                  -->
+  <!-- ============================================= -->
+  <script id="POSTS" type="application/json">
+  {
+    "posts": [
+      {
+        "id":"stillness-001",
+        "title":"The Stillness Between Notifications",
+        "date":"2025-08-01",
+        "tags":["poetry","noir","night"],
+        "body":"The world hums like a server room. I unplug a single cord and hear my own blood. It sounds like tide pulling back before the wave." 
+      },
+      {
+        "id":"fragments-045",
+        "title":"Fragments, Interlinked",
+        "date":"2025-07-30",
+        "tags":["craft","process"],
+        "body":"Write in shards. Give each shard a tag. Later, let the magnets in your head arrange them into constellations." 
+      },
+      {
+        "id":"binary-010",
+        "title":"Zero, One, and the Secret Third",
+        "date":"2025-07-28",
+        "tags":["essay","philosophy"],
+        "body":"We call it binary to feel certain. But the mind negotiates in maybes—analog fog pretending to be a switch." 
+      },
+      {
+        "id":"nocturne-072",
+        "title":"Nocturne for a Cheap Desk Lamp",
+        "date":"2025-07-21",
+        "tags":["poetry","vignette","night"],
+        "body":"Light like a quiet confession. Moths arrive, small priests of ruin, absolving me for writing the same wound again." 
+      },
+      {
+        "id":"shop-ideas-001",
+        "title":"Micro‑products Writers Actually Buy",
+        "date":"2025-07-14",
+        "tags":["business","lists","craft"],
+        "body":"• 30‑day scene drills  \n• Beta reader kit  \n• Pulp setting cards  \n• Night‑mode HTML notebook  \n• Voice‑matching mini course"
+      },
+      {
+        "id":"field-031",
+        "title":"Field Notes on Attention",
+        "date":"2025-06-29",
+        "tags":["essay","attention"],
+        "body":"Attention is a scarce mineral. Mine it gently or you salt your own earth." 
+      }
+    ]
+  }
+  </script>
+
+  <!-- ============================================= -->
+  <!-- 2) LOGIC: Rendering & interactions             -->
+  <!-- ============================================= -->
+  <script>
+  ;(() => {
+    const $ = sel => document.querySelector(sel)
+    const $$ = sel => Array.from(document.querySelectorAll(sel))
+
+    // Theme
+    const root = document.documentElement
+    const THEME_KEY = 'writerfeed.theme'
+    const savedTheme = localStorage.getItem(THEME_KEY)
+    if(savedTheme === 'light') root.classList.add('light')
+    $('#themeBtn').addEventListener('click', () => {
+      root.classList.toggle('light')
+      localStorage.setItem(THEME_KEY, root.classList.contains('light') ? 'light' : 'dark')
+    })
+
+    // Composer state
+    const UPOSTS_KEY = 'writerfeed.userposts'
+    const composer = $('#composer')
+    const toggleBtn = $('#composeToggle')
+    const cTitle = $('#cTitle')
+    const cTags = $('#cTags')
+    const cBody = $('#cBody')
+
+    toggleBtn.addEventListener('click', ()=>{
+      composer.classList.toggle('open')
+      composer.setAttribute('aria-hidden', composer.classList.contains('open') ? 'false' : 'true')
+      if (composer.classList.contains('open')) cTitle.focus()
+    })
+    $('#cClear').addEventListener('click', ()=>{ cTitle.value=''; cTags.value=''; cBody.value='' })
+    $('#cSave').addEventListener('click', ()=>{
+      const title = (cTitle.value || 'Untitled').trim()
+      const tags = cTags.value.split(',').map(s=>s.trim()).filter(Boolean)
+      const body = (cBody.value || '').trim()
+      if(!body){ toast('Add some body text'); return }
+      const now = new Date()
+      const id = slugify(title) + '-' + now.getTime().toString(36)
+      const post = { id, title, date: now.toISOString().slice(0,10), tags, body }
+      const arr = getUserPosts(); arr.unshift(post); localStorage.setItem(UPOSTS_KEY, JSON.stringify(arr))
+      cTitle.value=''; cTags.value=''; cBody.value=''
+      composer.classList.remove('open'); composer.setAttribute('aria-hidden','true')
+      // update in-memory posts and re-render
+      allPosts.unshift({...post, ts: new Date(post.date+'T12:00:00').getTime()})
+      // re-index tags and rerender list
+      rebuildTags(); resetAndRender(); const b=document.getElementById('unsavedBanner'); if(b){ b.style.display='block'; } ; toast('Saved (remember to Export)')
+    })
+
+    function getUserPosts(){
+      try{ return JSON.parse(localStorage.getItem(UPOSTS_KEY) || '[]') }catch{ return [] }
+    }
+
+    function slugify(s){
+      return String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'post'
+    }
+
+    // Load posts from embedded JSON + user posts
+    const data = JSON.parse(document.getElementById('POSTS').textContent)
+    const seedPosts = data.posts.map(p => ({...p, ts: new Date(p.date + 'T12:00:00').getTime()}))
+    const userPosts = getUserPosts().map(p => ({...p, ts: new Date(p.date + 'T12:00:00').getTime()}))
+    const allPosts = [...seedPosts, ...userPosts].sort((a,b) => b.ts - a.ts)
+
+    // State
+    let page = 1
+    const PAGE_SIZE = 6
+    let activeTag = null
+    let query = ''
+
+    // Index tags (function so we can rebuild after saves)
+    const tagCounts = new Map()
+    function rebuildTags(){
+      tagCounts.clear()
+      allPosts.forEach(p => (p.tags||[]).forEach(t => tagCounts.set(t, (tagCounts.get(t)||0)+1)))
+      const tagWrap = $('#tagChips'); tagWrap.innerHTML=''
+      ;[...tagCounts.keys()].sort((a,b)=>a.localeCompare(b)).forEach(t => {
+        const chip = document.createElement('button')
+        chip.className = 'chip'
+        chip.textContent = `${t} (${tagCounts.get(t)})`
+        chip.dataset.tag = t
+        chip.addEventListener('click', () => {
+          activeTag = (activeTag === t) ? null : t
+          $$('.chip').forEach(c => c.classList.toggle('active', c.dataset.tag === activeTag))
+          resetAndRender()
+        })
+        tagWrap.appendChild(chip)
+      })
+    }
+    rebuildTags()
+
+    // Search
+    const q = $('#q')
+    q.addEventListener('input', () => { query = q.value.trim().toLowerCase(); resetAndRender() })
+    window.addEventListener('keydown', (e)=>{ if(e.key === '/' && document.activeElement !== q){ e.preventDefault(); q.focus() }} )
+    window.addEventListener('keydown', (e)=>{ if(e.key === 'Escape'){ q.value=''; query=''; resetAndRender() }})
+
+    // Likes & bookmarks (local only)
+    const likeKey = id => `wf.like.${id}`
+    const markKey = id => `wf.mark.${id}`
+    const isLiked = id => localStorage.getItem(likeKey(id)) === '1'
+    const isMarked = id => localStorage.getItem(markKey(id)) === '1'
+
+    // Rendering
+    const feed = $('#feed')
+    const empty = $('#empty')
+
+    function resetAndRender(){ page = 1; render() }
+
+    function matches(p){
+      if(activeTag && !(p.tags||[]).includes(activeTag)) return false
+      if(!query) return true
+      const hay = [p.title, p.body, ...(p.tags||[])].join(' ').toLowerCase()
+      return hay.includes(query)
+    }
+
+    function render(){
+      const filtered = allPosts.filter(matches)
+      const total = filtered.length
+      const slice = filtered.slice(0, page * PAGE_SIZE)
+
+      empty.hidden = total > 0
+      $('#loadMore').style.display = (slice.length < total) ? 'block' : 'none'
+
+      feed.innerHTML = ''
+      slice.forEach(p => feed.appendChild(renderCard(p)))
+    }
+
+    function renderCard(p){
+      const el = document.createElement('article')
+      el.className = 'card'
+      const wc = p.body.split(/\s+/).filter(Boolean).length
+      const rt = Math.max(1, Math.round(wc/220))
+
+      el.innerHTML = `
+        <div class="meta"><span class="dot"></span><time datetime="${p.date}">${fmtDate(p.date)}</time><span>·</span><span class="muted">${wc.toLocaleString()} words · ${rt} min</span></div>
+        <h2 class="title">${escapeHtml(p.title||'Untitled')}</h2>
+        <div class="body">${formatBody(p.body)}</div>
+        ${p.tags?.length ? `<div class="tags">${p.tags.map(t=>`<span class="tag">#${escapeHtml(t)}</span>`).join('')}</div>`:''}
+        <div class="actions">
+          <button class="iconbtn like ${isLiked(p.id)?'active':''}" data-id="${p.id}" title="Like">
+            ❤️ <span class="muted">Like</span>
+          </button>
+          <button class="iconbtn mark ${isMarked(p.id)?'active':''}" data-id="${p.id}" title="Bookmark">
+            🔖 <span class="muted">Bookmark</span>
+          </button>
+          <button class="iconbtn share" data-id="${p.id}" title="Copy link">🔗 <span class="muted">Copy link</span></button>
+        </div>
+      `
+
+      el.querySelector('.like').addEventListener('click', (e)=>{
+        const id = e.currentTarget.dataset.id
+        const now = !isLiked(id)
+        localStorage.setItem(likeKey(id), now?'1':'0')
+        e.currentTarget.classList.toggle('active', now)
+      })
+      el.querySelector('.mark').addEventListener('click', (e)=>{
+        const id = e.currentTarget.dataset.id
+        const now = !isMarked(id)
+        localStorage.setItem(markKey(id), now?'1':'0')
+        e.currentTarget.classList.toggle('active', now)
+      })
+      el.querySelector('.share').addEventListener('click', async (e)=>{
+        const id = e.currentTarget.dataset.id
+        const url = location.origin + location.pathname + `#${id}`
+        try{ await navigator.clipboard.writeText(url); toast('Link copied'); }catch{ prompt('Copy link', url) }
+      })
+
+      return el
+    }
+
+    function fmtDate(d){
+      const dt = new Date(d + 'T12:00:00')
+      return dt.toLocaleDateString(undefined, {year:'numeric', month:'short', day:'2-digit'})
+    }
+
+    function escapeHtml(s){
+      return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+    }
+
+    // Mini formatter: supports blank-line paragraphs and manual line breaks (\n)
+    function formatBody(text){
+      // Support markdown-style bullets and intentional line breaks
+      const safe = escapeHtml(text)
+      const withBreaks = safe.replaceAll('\\n','<br/>')
+      // Split on blank lines to paragraphs
+      const paras = withBreaks.split(/\n\s*\n/)
+      return paras.map(p=>`<p>${p}</p>`).join('')
+    }
+
+    // Load more
+    $('#loadMore').addEventListener('click', ()=>{ page++; render() })
+
+    // Hash linking
+    if(location.hash){
+      const id = location.hash.slice(1)
+      const idx = allPosts.findIndex(p=>p.id===id)
+      if(idx>=0){ page = Math.ceil((idx+1)/PAGE_SIZE); render(); setTimeout(()=>{
+        const card = $(`#feed .card:nth-child(${idx+1})`)
+        card?.scrollIntoView({behavior:'smooth', block:'start'})
+      }, 120) }
+    } else {
+      render()
+    }
+
+    // Export filtered view as a self‑contained HTML (client‑side)
+    $('#exportLink').addEventListener('click', (e)=>{
+      e.preventDefault()
+      const filtered = allPosts.filter(matches)
+      const blob = new Blob([
+        '<!doctype html><meta charset="utf-8">',
+        '<title>Export — Writer Feed</title>',
+        '<style>body{font:16px/1.6 system-ui;max-width:780px;margin:40px auto;color:#111} h1{font-size:22px} .muted{color:#666} hr{border:0;border-top:1px solid #ddd;margin:24px 0} .tag{font-size:12px; background:#eef; border:1px solid #dde; border-radius:999px; padding:2px 8px; margin-right:6px}</style>',
+        '<h1>Export</h1><p class="muted">Filtered posts exported ', new Date().toLocaleString(), '</p><hr/>' ,
+        ...filtered.map(p=>`<article><h2>${escapeHtml(p.title||'Untitled')}</h2><div class="muted">${fmtDate(p.date)}</div><div>${formatBody(p.body)}</div>${p.tags?.length?('<p>'+p.tags.map(t=>`<span class=tag>#${escapeHtml(t)}</span>`).join('')+'</p>'):''}</article><hr/>`).join('')
+      ], {type:'text/html'})
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = 'writer-feed-export.html'; a.click()
+      setTimeout(()=> URL.revokeObjectURL(url), 5000)
+    })
+
+
+    // ===== Export Updated HTML (embeds posts into <script id="POSTS">) =====
+    function exportUpdatedHTML(){
+      // Build clean data (strip runtime ts, etc.)
+      const clean = allPosts.map(({id,title,date,tags,body})=>({id,title,date,tags,body}));
+      // Update POSTS script content in the live DOM
+      const postsScript = document.getElementById('POSTS');
+      postsScript.textContent = JSON.stringify({posts: clean}, null, 2);
+      // Serialize the whole document
+      const full = '<!doctype html>\n' + document.documentElement.outerHTML;
+      const blob = new Blob([full], {type:'text/html'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+      a.href = url; a.download = 'writer-feed-updated-' + stamp + '.html';
+      a.click();
+      setTimeout(()=> URL.revokeObjectURL(url), 5000);
+      // Hide banner after export
+      const b = document.getElementById('unsavedBanner'); if(b){ b.style.display='none'; }
+    }
+    // Button: Export Updated HTML
+    const exportBtn = document.getElementById('exportHtml');
+    if(exportBtn){ exportBtn.addEventListener('click', exportUpdatedHTML); }
+
+    // Tiny toast
+    let toastTimer
+    function toast(msg){
+      let t = $('#toast'); if(!t){ t = document.createElement('div'); t.id='toast'; document.body.appendChild(t) }
+      t.textContent = msg
+      Object.assign(t.style, {position:'fixed', left:'50%', transform:'translateX(-50%)', bottom:'24px', background:'rgba(0,0,0,.8)', color:'#fff', padding:'10px 14px', borderRadius:'10px', fontSize:'14px', zIndex:50})
+      clearTimeout(toastTimer); toastTimer = setTimeout(()=> t.remove(), 1400)
+    }
+  })()
+  </script>
+</body>
+</html>
